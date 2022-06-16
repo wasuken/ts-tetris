@@ -50,9 +50,53 @@ export const BLOCKS = [
   ],
 ];
 
-// blockをrot回右回転して返却する
+function listFourLine(block: number[][]) {
+  let lines = [];
+  let rows = [...Array(block[0].length)].map((_) => true);
+  for (let i = 0; i < block.length; i++) {
+    let line = true;
+    for (let k = 0; k < block[i].length; k++) {
+      const v = block[i][k] >= 1;
+      line &&= v;
+      rows[k] &&= v;
+    }
+    lines.push(line);
+  }
+  return {
+    lines,
+    rows,
+  };
+}
+// 4つ並びブロック判定
+function isFourLine(block: number[][]) {
+  const { lines, rows } = listFourLine(block);
+  return [...lines, ...rows].find((ary) => ary);
+}
+
+// 4つ棒とそれ以外で処理が変わるから抽象化関数を作成
 export function rightRotate(block: number[][], rot: Rotate): number[][] {
+  // 長棒だけ特別処理
+  if (isFourLine(block)) {
+    return rightRotateFourLine(block, rot);
+  } else {
+    return nrightRotate(block, rot);
+  }
+}
+
+export function leftRotate(block: number[][], rot: Rotate): number[][] {
+  // 長棒だけ特別処理
+  if (isFourLine(block)) {
+    return leftRotateFourLine(block, rot);
+  } else {
+    return nleftRotate(block, rot);
+  }
+}
+// blockをrot回右回転して返却する
+export function nrightRotate(block: number[][], rot: Rotate): number[][] {
   // 1未満の場合、そのまま返却する
+  if (rot < 1) {
+    return block;
+  }
   let newb: number[][] = [...Array(block.length)].map((_) =>
     [...Array(block.length)].map((_) => 0)
   );
@@ -61,80 +105,66 @@ export function rightRotate(block: number[][], rot: Rotate): number[][] {
       newb[j][i] = block[i][j];
     }
   }
-  if (rot === 1) {
-    return block;
-  } else {
-    return rightRotate(newb, (rot - 1) as Rotate);
-  }
+  return nrightRotate(newb, (rot - 1) as Rotate);
 }
-export function leftRotate(block: number[][], rot: Rotate): number[][] {
-  return rightRotate(block, Math.abs(rot - 4) as Rotate);
+export function nleftRotate(block: number[][], rot: Rotate): number[][] {
+  return nrightRotate(block, Math.abs(rot - 4) as Rotate);
 }
-// ブロック配置関数
-// 配置したブロック(>1)の座標も返却
-export function basePutMap(
-  map: number[][],
+
+const FOUR_LINE_BLOCKS = [
+  [
+    [1, 1, 1, 1],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ],
+  [
+    [0, 0, 0, 1],
+    [0, 0, 0, 1],
+    [0, 0, 0, 1],
+    [0, 0, 0, 1],
+  ],
+  [
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [1, 1, 1, 1],
+  ],
+  [
+    [1, 0, 0, 0],
+    [1, 0, 0, 0],
+    [1, 0, 0, 0],
+    [1, 0, 0, 0],
+  ],
+];
+
+export function rightRotateFourLine(
   block: number[][],
-  x: number,
-  y: number
-): PutMapResponse {
-  let nmap: number[][] = [...map];
-  let points: number[][] = [];
-  for (let i = 0; i < block.length; i++) {
-    for (let k = 0; k < block[i].length; k++) {
-      const v = (nmap[i + y][k + x] = block[i][k]);
-      if (v >= 1) points.push([i + y, k + x]);
+  rot: Rotate
+): number[][] {
+  let { lines, rows } = listFourLine(block);
+  //  a
+  // b c
+  //  d
+  const [a, _a, _b, c] = lines;
+  const [d, _c, _d, b] = rows;
+  // a -> b -> c -> d -> a で変換
+  let rst = [-1, false];
+  const ary = [a, b, c, d];
+  for (let i = 0; i < ary.length; i++) {
+    if (ary[i]) {
+      rst = i;
+      break;
     }
   }
-  return { map: nmap, points, error: false, msg: null };
-}
-// ブロック配置はどうせ一箇所なので公開するのはこちらだけ
-export function putBlock(map: number[][], block: number[][]): PutMapResponse {
-  return basePutMap(map, block, 3, 0);
-}
-
-// TODO: 既存ブロック判定が入ってない
-function moveBlock(
-  map: number[][],
-  points: number[][],
-  direction: number[]
-): PutMapResponse {
-  let nmap: number[][] = [...map];
-  let movedPoints: number[][] = points.map((p) => [
-    p[0] + direction[0],
-    p[1] + direction[1],
-  ]);
-  const ff = (v: number, high: number) => v <= 0 || v > high;
-  const exists = movedPoints.find((p) => ff(p[0], 20) && ff(p[1], 10));
-  if (exists) {
-    return {
-      map,
-      points,
-      error: true,
-      msg: "範囲エラー",
-    };
+  if (rst < 0) {
+    throw "not four line";
+  } else {
+    return FOUR_LINE_BLOCKS[(rst + rot) % FOUR_LINE_BLOCKS.length];
   }
-  const v = map[points[0][0]][points[0][1]];
-  points.forEach((p) => (nmap[p[0]][p[1]] = 0));
-  console.log(movedPoints)
-  movedPoints.forEach((p) => (nmap[p[0]][p[1]] = v));
-  return {
-    map: nmap,
-    points: movedPoints,
-    error: false,
-    msg: null,
-  };
 }
 
-// TODO: 最後まで手動で落とすと落ちる()
-// TODO: 一番下へ到達した際に到達したとわかるようなレスポンスを返却する必要がある
-export function blockFall(map: number[][], points: number[][]): PutMapResponse {
-  return moveBlock(map, points, [1, 0]);
+export function leftRotateFourLine(block: number[][], rot: Rotate): number[][] {
+  return rightRotateFourLine(block, Math.abs(rot - 4) as Rotate);
 }
 
-export function blockMoveLeft(map: number[][], points: number[][]): PutMapResponse{
-  return moveBlock(map, points, [0, -1]);
-}
-export function blockMoveRight(map: number[][], points: number[][]): PutMapResponse{
-  return moveBlock(map, points, [0, 1]);
-}

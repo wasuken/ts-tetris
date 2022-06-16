@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { TetrisProps } from "../props";
-import {
-  BLOCKS,
-  PutMapResponse,
-  putBlock,
-  blockFall,
-  rightRotate,
-  leftRotate,
-} from "../blocks";
+import { BLOCKS, rightRotate, leftRotate } from "../blocks";
+import { putBlock, blockFall } from "../map";
 import { Button } from "react-bootstrap";
 
 const colorAry = ["white", "#6899e8", "#de4568", "#69f542", "#f7df63"];
@@ -23,7 +17,7 @@ function Tetris(props: TetrisProps) {
   const handleRightRotateBtn = () => {};
   const handleFallDownBtn = () => {
     const resp = blockFall(tmap, movingBlocks);
-    console.log(resp)
+    console.log(resp);
     if (resp.error) {
       alert(resp.msg);
       return;
@@ -41,9 +35,10 @@ function Tetris(props: TetrisProps) {
   return (
     <div style={{ width: `${w}px` }}>
       {tmap.map((l, i) => (
-        <div style={{ display: "flex", flexWrap: "wrap" }}>
-          {l.map((n) => (
+        <div key={i} style={{ display: "flex", flexWrap: "wrap" }}>
+          {l.map((n, k) => (
             <div
+              key={k}
               style={{
                 width: `${props.edge - 2}px`,
                 height: `${props.edge - 2}px`,

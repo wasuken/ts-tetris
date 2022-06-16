@@ -1,10 +1,4 @@
 export type Rotate = 1 | 2 | 3 | 4;
-export type PutMapResponse = {
-  map: number[][];
-  points: number[][];
-  error: boolean;
-  msg: string | null;
-};
 export const BLOCKS = [
   [
     [0, 0, 0, 0],
@@ -149,7 +143,7 @@ export function rightRotateFourLine(
   const [a, _a, _b, c] = lines;
   const [d, _c, _d, b] = rows;
   // a -> b -> c -> d -> a で変換
-  let rst = [-1, false];
+  let rst = -1;
   const ary = [a, b, c, d];
   for (let i = 0; i < ary.length; i++) {
     if (ary[i]) {

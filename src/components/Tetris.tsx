@@ -18,43 +18,43 @@ function Tetris(props: TetrisProps) {
     props.blockHeight,
     props.blockWidth
   );
-  const [movingBlocks, setMovingBlocks] = useState<number[][]>([]);
+  const [movingBlockPoints, setMovingBlockPoints] = useState<number[][]>([]);
   const [tmap, setTmap] = useState<number[][]>(defaultTmap);
   const w = props.blockWidth * props.edge;
   const handleLeftRotateBtn = () => {};
   const handleRightRotateBtn = () => {};
   const handleFallDownBtn = () => {
-    const resp = blockFall(tmap, movingBlocks);
+    const resp = blockFall(tmap, movingBlockPoints);
     if (resp.error) {
       alert(resp.msg);
       return;
     }
-    setMovingBlocks(resp.points);
+    setMovingBlockPoints(resp.points);
     setTmap(resp.map);
   };
   const handleMoveLeftBtn = () => {
-    const resp = blockMoveLeft(tmap, movingBlocks);
+    const resp = blockMoveLeft(tmap, movingBlockPoints);
     if (resp.error) {
       alert(resp.msg);
       return;
     }
-    setMovingBlocks(resp.points);
+    setMovingBlockPoints(resp.points);
     setTmap(resp.map);
   };
   const handleMoveRightBtn = () => {
-    const resp = blockMoveRight(tmap, movingBlocks);
+    const resp = blockMoveRight(tmap, movingBlockPoints);
     if (resp.error) {
       alert(resp.msg);
       return;
     }
-    setMovingBlocks(resp.points);
+    setMovingBlockPoints(resp.points);
     setTmap(resp.map);
   };
 
   useEffect(() => {
     const resp = putBlock(defaultTmap, BLOCKS[0]);
     setTmap(resp.map);
-    setMovingBlocks(resp.points);
+    setMovingBlockPoints(resp.points);
     setInterval(() => {}, 1000);
   }, []);
   return (

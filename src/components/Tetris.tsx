@@ -1,14 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { TetrisProps } from "../props";
 import { BLOCKS, rightRotate, leftRotate } from "../blocks";
-import { putBlock, blockFall } from "../map";
+import {
+  blockMoveLeft,
+  blockMoveRight,
+  putBlock,
+  blockFall,
+  generateMap,
+  isFallComplete,
+} from "../map";
 import { Button } from "react-bootstrap";
 
 const colorAry = ["white", "#6899e8", "#de4568", "#69f542", "#f7df63"];
 
 function Tetris(props: TetrisProps) {
-  const defaultTmap: number[][] = [...Array(props.blockHeight)].map((_) =>
-    [...Array(props.blockWidth)].map((_) => 0)
+  const defaultTmap: number[][] = generateMap(
+    props.blockHeight,
+    props.blockWidth
   );
   const [movingBlocks, setMovingBlocks] = useState<number[][]>([]);
   const [tmap, setTmap] = useState<number[][]>(defaultTmap);
@@ -17,7 +25,24 @@ function Tetris(props: TetrisProps) {
   const handleRightRotateBtn = () => {};
   const handleFallDownBtn = () => {
     const resp = blockFall(tmap, movingBlocks);
-    console.log(resp);
+    if (resp.error) {
+      alert(resp.msg);
+      return;
+    }
+    setMovingBlocks(resp.points);
+    setTmap(resp.map);
+  };
+  const handleMoveLeftBtn = () => {
+    const resp = blockMoveLeft(tmap, movingBlocks);
+    if (resp.error) {
+      alert(resp.msg);
+      return;
+    }
+    setMovingBlocks(resp.points);
+    setTmap(resp.map);
+  };
+  const handleMoveRightBtn = () => {
+    const resp = blockMoveRight(tmap, movingBlocks);
     if (resp.error) {
       alert(resp.msg);
       return;
@@ -52,14 +77,30 @@ function Tetris(props: TetrisProps) {
           {<div style={{ width: "100%" }}> </div>}
         </div>
       ))}
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <Button onClick={handleLeftRotateBtn} variant="outline-primary">
+      <div
+        style={{
+          paddingBottom: "5px",
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
+        <Button onClick={handleMoveLeftBtn} variant="outline-primary">
           {" "}
-          左回転
+          左移動
         </Button>
         <Button onClick={handleFallDownBtn} variant="outline-primary">
           {" "}
           一つ下へ
+        </Button>
+        <Button onClick={handleMoveRightBtn} variant="outline-primary">
+          {" "}
+          右移動
+        </Button>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <Button onClick={handleLeftRotateBtn} variant="outline-primary">
+          {" "}
+          左回転
         </Button>
         <Button onClick={handleRightRotateBtn} variant="outline-primary">
           {" "}

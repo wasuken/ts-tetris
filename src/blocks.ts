@@ -44,6 +44,33 @@ export const BLOCKS = [
   ],
 ];
 
+const FOUR_LINE_BLOCKS = [
+  [
+    [1, 1, 1, 1],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ],
+  [
+    [0, 0, 0, 1],
+    [0, 0, 0, 1],
+    [0, 0, 0, 1],
+    [0, 0, 0, 1],
+  ],
+  [
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [1, 1, 1, 1],
+  ],
+  [
+    [1, 0, 0, 0],
+    [1, 0, 0, 0],
+    [1, 0, 0, 0],
+    [1, 0, 0, 0],
+  ],
+];
+
 function listFourLine(block: number[][]) {
   let lines = [];
   let rows = [...Array(block[0].length)].map((_) => true);
@@ -105,33 +132,6 @@ export function nleftRotate(block: number[][], rot: Rotate): number[][] {
   return nrightRotate(block, Math.abs(rot - 4) as Rotate);
 }
 
-const FOUR_LINE_BLOCKS = [
-  [
-    [1, 1, 1, 1],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-  ],
-  [
-    [0, 0, 0, 1],
-    [0, 0, 0, 1],
-    [0, 0, 0, 1],
-    [0, 0, 0, 1],
-  ],
-  [
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [1, 1, 1, 1],
-  ],
-  [
-    [1, 0, 0, 0],
-    [1, 0, 0, 0],
-    [1, 0, 0, 0],
-    [1, 0, 0, 0],
-  ],
-];
-
 export function rightRotateFourLine(
   block: number[][],
   rot: Rotate
@@ -140,9 +140,9 @@ export function rightRotateFourLine(
   //  a
   // b c
   //  d
-  const [a, _a, _b, c] = lines;
-  const [d, _c, _d, b] = rows;
-  // a -> b -> c -> d -> a で変換
+  let a, b, c, d, _;
+  [a, _, _, c] = lines;
+  [d, _, _, b] = rows;
   let rst = -1;
   const ary = [a, b, c, d];
   for (let i = 0; i < ary.length; i++) {
@@ -161,4 +161,3 @@ export function rightRotateFourLine(
 export function leftRotateFourLine(block: number[][], rot: Rotate): number[][] {
   return rightRotateFourLine(block, Math.abs(rot - 4) as Rotate);
 }
-

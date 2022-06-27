@@ -1,3 +1,4 @@
+import { leftRotate, rightRotate, Rotate } from "./blocks";
 export type PutMapResponse = {
   map: number[][];
   points: number[][];
@@ -21,6 +22,14 @@ export function basePutMap(
     }
   }
   return { map: nmap, points, error: false, msg: null };
+}
+export function putOneBlock(map: number[][], points: number[][], v: number): PutMapResponse{
+  let nmap = [...map];
+  for (let i = 0; i < points.length; i++) {
+    const [a, b] = points[i];
+    nmap[a][b] = v;
+  }
+  return nmap;
 }
 // ブロック配置はどうせ一箇所なので公開するのはこちらだけ
 export function putBlock(map: number[][], block: number[][]): PutMapResponse {
@@ -90,6 +99,37 @@ export function isFallComplete(map: number[][], points: number[][]): boolean {
     const [a, b] = p;
     return (ff(a, map.length) || ff(b, map[0].length)) && map[a][b] > 0;
   });
+}
+
+// map上のブロックをrot回右回転する
+export function rightRotateBlock(points: number[][], rot: Rotate) {
+  let blocks = [...Array(4)].map((x) => [...Array(4)].map((y) => 0));
+  points.forEach((p) => {
+    const [a, b] = p;
+    blocks[a][b] = 1;
+  });
+
+  const rotated_points = rightRotate(blocks, rot);
+}
+
+// map上のブロックの座標をmd向きにrot回左回転する
+export function rotateMapBlock(
+  points: number[][],
+  md: number,
+  rot: Rotate
+) {
+  const piv = points[0];
+  const ref = (p) => [p[1] * -md, p[0] * md];
+  const repf = (f, x, n) => (n > 0 ? repf(f, x.map(f), n - 1) : x);
+  let ppoints = points
+    .slice(1)
+    // 相対座標へ変換
+    .map((p) => [p[0] - piv[0], p[1] - piv[1]]);
+  return [
+    piv,
+    // もとの座標に復元
+    ...repf(ref, ppoints, rot).map((p) => [p[0] + piv[0], p[1] + piv[1]]),
+  ];
 }
 
 // mapを生成

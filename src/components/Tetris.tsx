@@ -5,9 +5,11 @@ import {
   blockMoveLeft,
   blockMoveRight,
   putBlock,
+  putOneBlock,
   blockFall,
   generateMap,
   isFallComplete,
+  rotateMapBlock,
 } from "../map";
 import { Button } from "react-bootstrap";
 
@@ -20,13 +22,35 @@ function Tetris(props: TetrisProps) {
   );
   const [movingBlockPoints, setMovingBlockPoints] = useState<number[][]>([]);
   const [tmap, setTmap] = useState<number[][]>(defaultTmap);
+  const [sec, setSec] = useState<number>(0);
   const w = props.blockWidth * props.edge;
-  const handleLeftRotateBtn = () => {};
-  const handleRightRotateBtn = () => {};
+  const handleRotateBtn = (rot: number) => {
+    const npoints = rotateMapBlock(movingBlockPoints, rot, 1);
+    // 範囲外の場合、回転を中止するか
+    const check = npoints.find(
+      (p) => p[0] < 0 || p[0] > 20 || p[1] < 0 || p[1] > 10
+    );
+    if (check) return;
+    // 位置の補正をする
+    let nmap = [...tmap];
+    nmap = putOneBlock(nmap, movingBlockPoints, 0);
+    // mapからpointsを削除
+    nmap = putOneBlock(nmap, npoints, 1);
+    // 対応するミノを回転して配置
+    setMovingBlockPoints(npoints);
+    setTmap(nmap);
+  };
+  const handleLeftRotateBtn = () => {
+    handleRotateBtn(-1);
+  };
+  const handleRightRotateBtn = () => {
+    handleRotateBtn(1);
+  };
   const handleFallDownBtn = () => {
     const resp = blockFall(tmap, movingBlockPoints);
     if (resp.error) {
-      alert(resp.msg);
+      // alert(resp.msg);
+      console.log(resp.msg)
       return;
     }
     setMovingBlockPoints(resp.points);
@@ -55,8 +79,12 @@ function Tetris(props: TetrisProps) {
     const resp = putBlock(defaultTmap, BLOCKS[0]);
     setTmap(resp.map);
     setMovingBlockPoints(resp.points);
-    setInterval(() => {}, 1000);
   }, []);
+  useEffect(() => {
+    setTimeout(() => setSec(sec+1), 1000);
+    if (movingBlockPoints.length < 1) return;
+    handleFallDownBtn();
+  }, [sec]);
   return (
     <div style={{ width: `${w}px` }}>
       {tmap.map((l, i) => (

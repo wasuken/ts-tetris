@@ -23,7 +23,11 @@ export function basePutMap(
   }
   return { map: nmap, points, error: false, msg: null };
 }
-export function putOneBlock(map: number[][], points: number[][], v: number): PutMapResponse{
+export function putOneBlock(
+  map: number[][],
+  points: number[][],
+  v: number
+): number[][] {
   let nmap = [...map];
   for (let i = 0; i < points.length; i++) {
     const [a, b] = points[i];
@@ -61,7 +65,7 @@ function moveBlock(
       msg: "範囲エラー",
     };
   }
-  const v = map[points[0][0]][points[0][1]];
+  cnst v = map[points[0][0]][points[0][1]];
   points.forEach((p) => (nmap[p[0]][p[1]] = 0));
   movedPoints.forEach((p) => (nmap[p[0]][p[1]] = v));
   return {
@@ -112,23 +116,36 @@ export function rightRotateBlock(points: number[][], rot: Rotate) {
   const rotated_points = rightRotate(blocks, rot);
 }
 
+type RotateReverseFunc = (a: number[]) => number[];
+type RotateRepeatFunc = (
+  f: RotateReverseFunc,
+  x: number[][],
+  y: number
+) => number[][];
+
 // map上のブロックの座標をmd向きにrot回左回転する
-export function rotateMapBlock(
-  points: number[][],
-  md: number,
-  rot: Rotate
-) {
-  const piv = points[0];
-  const ref = (p) => [p[1] * -md, p[0] * md];
-  const repf = (f, x, n) => (n > 0 ? repf(f, x.map(f), n - 1) : x);
-  let ppoints = points
+export function rotateMapBlock(points: number[][], md: number, rot: Rotate) {
+  const piv: number[] = points[0];
+  const ref: RotateReverseFunc = (p: number[]): number[] => [
+    p[1] * -md,
+    p[0] * md,
+  ];
+  const repf: RotateRepeatFunc = (
+    f: RotateReverseFunc,
+    x: number[][],
+    n: number
+  ) => (n > 0 ? repf(f, x.map(f), n - 1) : x);
+  let ppoints: number[][] = points
     .slice(1)
     // 相対座標へ変換
     .map((p) => [p[0] - piv[0], p[1] - piv[1]]);
   return [
     piv,
     // もとの座標に復元
-    ...repf(ref, ppoints, rot).map((p) => [p[0] + piv[0], p[1] + piv[1]]),
+    ...repf(ref, ppoints, rot).map((p: number[]) => [
+      p[0] + piv[0],
+      p[1] + piv[1],
+    ]),
   ];
 }
 

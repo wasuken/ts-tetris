@@ -1,8 +1,15 @@
 import { leftRotate, rightRotate, Rotate } from "./blocks";
+
+export const TetrisErrorType = {
+  RANGE: "range",
+  ALREADY_BLOCK: "alreadyBlock",
+} as const;
+type TetrisErrorType = typeof TetrisErrorType[keyof typeof TetrisErrorType];
+
 export type PutMapResponse = {
   map: number[][];
   points: number[][];
-  error: boolean;
+  error: TetrisErrorType | null;
   msg: string | null;
 };
 // ブロック配置関数
@@ -21,7 +28,7 @@ export function basePutMap(
       if (v >= 1) points.push([i + y, k + x]);
     }
   }
-  return { map: nmap, points, error: false, msg: null };
+  return { map: nmap, points, error: null, msg: null };
 }
 export function putOneBlock(
   map: number[][],
@@ -46,7 +53,7 @@ function moveBlock(
   points: number[][],
   direction: number[]
 ): PutMapResponse {
-  let nmap: number[][] = [...map];
+  let nmap: number[][] = JSON.parse(JSON.stringify(map));
   let movedPoints: number[][] = points.map((p) => [
     p[0] + direction[0],
     p[1] + direction[1],
@@ -57,23 +64,38 @@ function moveBlock(
   const exists = movedPoints.find(
     (p) => ff(p[0], map.length) || ff(p[1], map[0].length)
   );
+  // 移動先にブロックがあればエラーにする
   if (exists) {
     return {
       map,
       points,
-      error: true,
+      error: TetrisErrorType.RANGE,
       msg: "範囲エラー",
     };
   }
-  cnst v = map[points[0][0]][points[0][1]];
+  const v = map[points[0][0]][points[0][1]];
   points.forEach((p) => (nmap[p[0]][p[1]] = 0));
-  movedPoints.forEach((p) => (nmap[p[0]][p[1]] = v));
-  return {
-    map: nmap,
-    points: movedPoints,
-    error: false,
-    msg: null,
-  };
+  const ex = movedPoints.find((p) => {
+    const [a, b] = p;
+    const v = nmap[a][b];
+    return v >= 1;
+  });
+  if (ex) {
+    return {
+      map,
+      points,
+      error: TetrisErrorType.ALREADY_BLOCK,
+      msg: "already exists.",
+    };
+  } else {
+    movedPoints.forEach((p) => (nmap[p[0]][p[1]] = v));
+    return {
+      map: nmap,
+      points: movedPoints,
+      error: null,
+      msg: null,
+    };
+  }
 }
 
 // TODO: 最後まで手動で落とすと落ちる()
@@ -147,6 +169,36 @@ export function rotateMapBlock(points: number[][], md: number, rot: Rotate) {
       p[1] + piv[1],
     ]),
   ];
+}
+
+// 行が埋まっているか確認
+export function isMapLineFill(map: number[][]): boolean {
+  return !!map.find(
+    (l) => l.reduce((acm, x) => acm + (x >= 1 ? 1 : 0), 0) === l.length
+  );
+}
+// 埋まっている行を削除する
+export function mapFillLineRemove(map: number[][]): [number[][], number] {
+  let nmap = [];
+  let rmCnt = 0;
+  for (let i = 0; i < map.length; i++) {
+    let line: number[] = [];
+    let isFill = true;
+    for (let j = 0; j < map[i].length; j++) {
+      isFill = isFill && map[i][j] >= 1;
+      line.push(map[i][j])
+    }
+    if (isFill === false) {
+      nmap.push(line);
+    }else{
+      rmCnt++;
+    }
+  }
+  for (let i = 0; i < rmCnt; i++) {
+    // 先頭に空白行を追加していく
+    nmap.unshift(Array.from({ length: map[0].length}, () => 0));
+  }
+  return [nmap, rmCnt];
 }
 
 // mapを生成

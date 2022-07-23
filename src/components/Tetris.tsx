@@ -97,7 +97,6 @@ function Tetris(props: TetrisProps) {
         tmap[4].filter((x, i) => mps.includes(i) && x >= 1).length > 0;
       let tgPoints = [];
       if (isEndLine) {
-        console.log(tmap);
         alert("finish.");
         setFinish(true);
         return;
@@ -119,8 +118,8 @@ function Tetris(props: TetrisProps) {
       lmap = nmap;
       // cnt分Yをずらす
       // これはTスピンみたいなことされたら多分しぬ
-      const npoints = lmap.map((p) => [p[0] + rmCnt, p[1]]);
-      setMovingBlockPoints(npoints);
+      const npoints = lpoints.map((p) => [p[0] + rmCnt, p[1]]);
+      lpoints = npoints;
     }
     setTmap(lmap);
     setMovingBlockPoints(lpoints);
